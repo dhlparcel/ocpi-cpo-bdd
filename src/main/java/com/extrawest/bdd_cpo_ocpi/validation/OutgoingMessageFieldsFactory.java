@@ -7,22 +7,31 @@ import com.extrawest.ocpi.exception.PropertyConstraintException;
 import com.extrawest.ocpi.model.markers.OcpiRequestData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.*;
-import static com.extrawest.bdd_cpo_ocpi.utils.Generators.*;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.BUG_CREATING_INSTANCE;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.INVALID_FIELD_VALUE;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.INVALID_REQUIRED_PARAM;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.REDUNDANT_EXPECTED_PARAM;
+import static com.extrawest.bdd_cpo_ocpi.utils.Generators.randomBoolean;
+import static com.extrawest.bdd_cpo_ocpi.utils.Generators.randomEnum;
+import static com.extrawest.bdd_cpo_ocpi.utils.Generators.randomFloat;
+import static com.extrawest.bdd_cpo_ocpi.utils.Generators.randomInteger;
 import static java.util.Objects.isNull;
 
 /**
@@ -32,14 +41,14 @@ import static java.util.Objects.isNull;
  * Mandatory for all optional fields of parametrized model.
  */
 
-@Slf4j
-@Component
+@Singleton
 public abstract class OutgoingMessageFieldsFactory<T extends OcpiRequestData> {
-    @Autowired
-    @Setter
+    private static final Logger LOG = LoggerFactory.getLogger(OutgoingMessageFieldsFactory.class);
+
+    @Inject
     protected ObjectMapper mapper;
 
-    @Value("${wildcard:any}")
+    //    @Value("${wildcard:any}")
     protected String wildCard;
 
     protected Map<String, BiConsumer<T, String>> requiredFieldsSetup;
@@ -157,9 +166,9 @@ public abstract class OutgoingMessageFieldsFactory<T extends OcpiRequestData> {
                                                            Class<E> clazz) {
         E[] result;
         try {
-            log.info("JSON string for array parsing: " + value);
+            LOG.info("JSON string for array parsing: " + value);
             result = mapper.readerForArrayOf(clazz).readValue(value);
-            log.info("Models parsed from string: " + Arrays.toString(result));
+            LOG.info("Models parsed from string: " + Arrays.toString(result));
         } catch (JsonProcessingException e) {
             throw new ValidationException(
                     String.format(INVALID_FIELD_VALUE.getValue(), getParameterizeClassName(), fieldName, value));
@@ -211,12 +220,12 @@ public abstract class OutgoingMessageFieldsFactory<T extends OcpiRequestData> {
 
     protected <M extends OcpiRequestData> M parseModelFromJson(String value, String fieldName, Class<M> clazz) {
         try {
-            log.info("JSON string for parsing: " + value);
+            LOG.info("JSON string for parsing: " + value);
             M model = mapper.readValue(value, clazz);
-            log.info("Model parsed from string: " + model);
+            LOG.info("Model parsed from string: " + model);
             return model;
         } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
+            LOG.error(e.getMessage());
             throw new ValidationException(
                     String.format(INVALID_FIELD_VALUE.getValue(), getParameterizeClassName(), fieldName, value));
         }
@@ -224,9 +233,9 @@ public abstract class OutgoingMessageFieldsFactory<T extends OcpiRequestData> {
 
     protected <M extends OcpiRequestData> M[] parseModelsFromJson(String value, String fieldName, Class<M> clazz) {
         try {
-            log.info("JSON string for array parsing: " + value);
+            LOG.info("JSON string for array parsing: " + value);
             M[] result = mapper.readerForArrayOf(clazz).readValue(value);
-            log.info("Models parsed from string: " + Arrays.toString(result));
+            LOG.info("Models parsed from string: " + Arrays.toString(result));
             return result;
         } catch (JsonProcessingException e) {
             throw new ValidationException(

@@ -13,8 +13,11 @@ import com.extrawest.bdd_cpo_ocpi.service.MessageService;
 import com.extrawest.bdd_cpo_ocpi.service.RequestHolder;
 import com.extrawest.bdd_cpo_ocpi.service.RequestService;
 import com.extrawest.bdd_cpo_ocpi.service.impl.ResponseParsingService;
-import com.extrawest.bdd_cpo_ocpi.utils.RepositoryUtils;
-import com.extrawest.ocpi.model.dto.*;
+import com.extrawest.ocpi.model.dto.BusinessDetails;
+import com.extrawest.ocpi.model.dto.CredentialsDto;
+import com.extrawest.ocpi.model.dto.CredentialsRole;
+import com.extrawest.ocpi.model.dto.VersionDetailsDto;
+import com.extrawest.ocpi.model.dto.VersionDto;
 import com.extrawest.ocpi.model.dto.tariff.TariffDto;
 import com.extrawest.ocpi.model.enums.Role;
 import com.extrawest.ocpi.model.markers.OcpiRequestData;
@@ -28,74 +31,72 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.junit.Cucumber;
-import io.cucumber.junit.CucumberOptions;
-import io.cucumber.spring.CucumberContextConfiguration;
 import io.restassured.http.Method;
 import io.restassured.response.Response;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.mongodb.CodecRegistryProvider;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.EMPTY_EXPECTED_VALUE;
-import static com.extrawest.bdd_cpo_ocpi.utils.JsonUtils.readJson;
-import static com.extrawest.bdd_cpo_ocpi.utils.RepositoryUtils.importToCollection;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON;
+//import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON;
 
-@Slf4j
-@RequiredArgsConstructor
-@CucumberContextConfiguration
-@SpringBootTest
-@RunWith(Cucumber.class)
-@CucumberOptions(features = "src/test/resources")
-@Testcontainers
+//@CucumberContextConfiguration
+//@SpringBootTest
+//@RunWith(Cucumber.class)
+//@CucumberOptions(features = "src/test/resources")
+//@Testcontainers
+@Singleton
 public class StepsDefinitionTest extends ContainerBase {
-    private static Response response;
-
-    private final VersionDetailsRepository versionDetailsRepository;
-    private final VersionsRepository versionsRepository;
-    private final CredentialsRepository credentialsRepository;
-
-    private final ServerEndpoints serverEndpoints;
-    private final MessageService messagingService;
-    private final ResponseParsingService responseListService;
-
-    private final RequestService httpStepsService;
-    private final RequestHolder requestHolder;
-
-    private final EmspConfig emspConfig;
-    private final CpoConfig cpoConfig;
-
-    private final MongoTemplate mongoTemplate;
+    private static final Logger log = LoggerFactory.getLogger(StepsDefinitionTest.class);
 
     private final static String AUTHORIZATION_TOKEN = "Token %s";
     private final static String STATUS_CODE = "status_code";
-
-    @Autowired
-    @Qualifier("mongoDatabaseFactory")
-    private CodecRegistryProvider codecRegistryProvider;
-
-    private static final List<String> mongoCollections = new ArrayList<>();
+    //    private static final List<String> mongoCollections = new ArrayList<>();
+    private static Response response;
+    private final VersionDetailsRepository versionDetailsRepository;
+    private final VersionsRepository versionsRepository;
+    private final CredentialsRepository credentialsRepository;
+    private final ServerEndpoints serverEndpoints;
+    private final MessageService messagingService;
+    private final ResponseParsingService responseListService;
+    private final RequestService httpStepsService;
+    private final RequestHolder requestHolder;
+    private final EmspConfig emspConfig;
+    private final CpoConfig cpoConfig;
+    //    private final MongoTemplate mongoTemplate;
+//    @Autowired
+//    @Qualifier("mongoDatabaseFactory")
+//    private CodecRegistryProvider codecRegistryProvider;
     private int stepNumber;
 
+    public StepsDefinitionTest(CpoConfig cpoConfig,
+                               VersionDetailsRepository versionDetailsRepository,
+                               VersionsRepository versionsRepository,
+                               CredentialsRepository credentialsRepository,
+                               ServerEndpoints serverEndpoints,
+                               MessageService messagingService,
+                               ResponseParsingService responseListService,
+                               RequestService httpStepsService,
+                               RequestHolder requestHolder,
+                               EmspConfig emspConfig) {
+        this.cpoConfig = cpoConfig;
+        this.versionDetailsRepository = versionDetailsRepository;
+        this.versionsRepository = versionsRepository;
+        this.credentialsRepository = credentialsRepository;
+        this.serverEndpoints = serverEndpoints;
+        this.messagingService = messagingService;
+        this.responseListService = responseListService;
+        this.httpStepsService = httpStepsService;
+        this.requestHolder = requestHolder;
+        this.emspConfig = emspConfig;
+    }
 
     private static int getOcpiStatusCode(Response response) {
         return response.jsonPath().getInt(STATUS_CODE);
@@ -106,14 +107,16 @@ public class StepsDefinitionTest extends ContainerBase {
         int scenarioLine = scenario.getLine();
         String scenarioName = scenario.getName();
 
-        String scenarioFileName = Paths.get(scenario.getUri()).getFileName().toString();
+        // werkt niet want scenario file in andere module dus uri is 'classpath:bdd-test/versions.feature'
+//        String scenarioFileName = Paths.get(scenario.getUri()).getFileName().toString();
+        String scenarioFileName = scenario.getUri().getSchemeSpecificPart();
         log.info(String.format("\nNew Scenario: %s (%s, line %s)", scenarioName, scenarioFileName, scenarioLine));
 
         stepNumber = 0;
 
         requestHolder.addHeaders(Map.of(
-                HttpHeaders.CONTENT_TYPE, APPLICATION_JSON.toString(),
-                HttpHeaders.AUTHORIZATION, String.format(AUTHORIZATION_TOKEN, emspConfig.getTokenA())
+                "Content-Type", "application/json",
+                "Authorization", String.format(AUTHORIZATION_TOKEN, emspConfig.getTokenA())
         ));
 
         getVersions();
@@ -128,10 +131,10 @@ public class StepsDefinitionTest extends ContainerBase {
 
     @After
     public void tearDown() {
-        mongoCollections.forEach(mongoCollection -> RepositoryUtils.remove(mongoTemplate,
-                new org.springframework.data.mongodb.core.query.Query(),
-                mongoCollection));
-        mongoCollections.clear();
+//        mongoCollections.forEach(mongoCollection -> RepositoryUtils.remove(mongoTemplate,
+//                new org.springframework.data.mongodb.core.query.Query(),
+//                mongoCollection));
+//        mongoCollections.clear();
 
         versionsRepository.clear();
         versionDetailsRepository.clear();
@@ -139,9 +142,9 @@ public class StepsDefinitionTest extends ContainerBase {
 
     @Given("CPO has {string} data {string}")
     public void createMongoCollectionWithData(String collectionName, String filePath) {
-        mongoCollections.add(collectionName);
-        importToCollection(codecRegistryProvider, mongoTemplate,
-                readJson(filePath), collectionName);
+//        mongoCollections.add(collectionName);
+//        importToCollection(codecRegistryProvider, mongoTemplate,
+//                readJson(filePath), collectionName);
         log.info("STEP {}: added {} into DB collection {}", stepNumber, filePath, collectionName);
     }
 
@@ -149,7 +152,7 @@ public class StepsDefinitionTest extends ContainerBase {
     public void registerCpo() {
         CredentialsDto credentials = getCredentials();
         requestHolder.addHeaders(Map.of(
-                HttpHeaders.AUTHORIZATION, String.format(AUTHORIZATION_TOKEN, credentials.getToken()))
+                "Authorization", String.format(AUTHORIZATION_TOKEN, credentials.getToken()))
         );
     }
 
@@ -231,6 +234,7 @@ public class StepsDefinitionTest extends ContainerBase {
         return cpoCredentials;
     }
 
+    @When("eMSP checks \"version\" in CPO system")
     public void getVersions() {
         createMongoCollectionWithData("tokens-a", "db/credentials.json");
         ImplementedMessageType implementedType = ImplementedMessageType.VERSION;
@@ -254,7 +258,6 @@ public class StepsDefinitionTest extends ContainerBase {
 
         log.info("Before tests: CPO received 2.2.1 version details from eMSP");
     }
-
 
 
     /////////////////////////////////////////////////    Check response   //////////////////////////////////////////////
@@ -339,7 +342,7 @@ public class StepsDefinitionTest extends ContainerBase {
     }
 
     private void checkResponseIsSuccess(Response response) {
-        if (!HttpStatusCode.valueOf(response.statusCode()).is2xxSuccessful()) {
+        if (!(response.statusCode() >= 200 && response.statusCode() <= 299)) {
             throw new BddTestingException(String.format("STEP %s: Server responded with http status code %s: %s",
                     stepNumber,
                     response.getStatusCode(),

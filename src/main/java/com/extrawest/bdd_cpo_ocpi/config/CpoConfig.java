@@ -1,16 +1,20 @@
 package com.extrawest.bdd_cpo_ocpi.config;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import jakarta.inject.Singleton;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-@Getter
-@Setter
-@Configuration
+@Singleton
 public class CpoConfig {
-    @Value("${cpo.token.a}")
+    @ConfigProperty(name = "cpo.token.a")
     private String tokenA;
-    @Value("${cpo.version.url}")
+    @ConfigProperty(name = "cpo.version.url")
     private String versionUrl;
+
+    public String getTokenA() {
+        return tokenA;
+    }
+
+    public String getVersionUrl() {
+        return versionUrl;
+    }
 }

@@ -2,9 +2,9 @@ package com.extrawest.bdd_cpo_ocpi.repository.impl;
 
 import com.extrawest.bdd_cpo_ocpi.repository.CredentialsRepository;
 import com.extrawest.ocpi.model.dto.CredentialsDto;
-import org.springframework.stereotype.Component;
+import jakarta.inject.Singleton;
 
-@Component
+@Singleton
 public class CredentialsRepositoryImpl implements CredentialsRepository {
     private CredentialsDto cpoCredentials;
 

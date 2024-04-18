@@ -4,18 +4,14 @@ import com.extrawest.bdd_cpo_ocpi.validation.IncomingMessageFieldsFactory;
 import com.extrawest.bdd_cpo_ocpi.validation.ResponseMessageFactory;
 import com.extrawest.ocpi.model.dto.VersionDto;
 import com.extrawest.ocpi.model.enums.VersionNumber;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import jakarta.inject.Singleton;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import javax.annotation.PostConstruct;
 
-@Slf4j
-@Component
-@RequiredArgsConstructor
+@Singleton
 public class VersionResponseBddHandler extends IncomingMessageFieldsFactory<VersionDto>
         implements ResponseMessageFactory<VersionDto> {
     public static final String VERSION_NUMBER_REQUIRED = "version";

@@ -8,30 +8,38 @@ import com.extrawest.bdd_cpo_ocpi.validation.RequestMessageFactory;
 import com.extrawest.ocpi.model.markers.OcpiRequestData;
 import com.extrawest.ocpi.model.markers.OcpiResponseData;
 import io.restassured.response.Response;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.inject.Singleton;
 import org.apache.commons.collections4.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.*;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.ANY_NOT_ALLOWED;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.EMPTY_RESPONSE_DATA_RECEIVED;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.EMPTY_RESPONSE_RECEIVED;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.EXPECTED_AND_ACTUAL_LISTS_NOT_EQUALS;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.INVALID_RESPONSE_RECEIVED;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.MODEL_CANT_BE_INSTANTIATED;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.NON_MATCH_RESPONSE_LIST_SIZE;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.NON_MATCH_ROW;
 
-@Service
-@Slf4j
-@RequiredArgsConstructor
+@Singleton
 public class ResponseParsingService {
-    private final AssertionAndValidationService factories;
+    private static final Logger log = LoggerFactory.getLogger(ResponseParsingService.class);
 
     private static final String DATA_FIELD = "data";
-
-    @Value("${wildcard:any}")
+    private final AssertionAndValidationService factories;
+    //    @Value("${wildcard:any}")
     protected String wildCard;
+
+    public ResponseParsingService(AssertionAndValidationService factories) {
+        this.factories = factories;
+    }
 
     public static <T> List<T> parseList(Response response, Class<T> clazz) {
         checkNotEmpty(response);
@@ -45,7 +53,10 @@ public class ResponseParsingService {
         }
 
         if (data == null || data.isEmpty()) {
-            throw new BddTestingException(String.format(EMPTY_RESPONSE_DATA_RECEIVED.getValue()));
+            throw new BddTestingException(EMPTY_RESPONSE_DATA_RECEIVED.getValue());
+        }
+        if (data.contains(null)) {
+            throw new BddTestingException(INVALID_RESPONSE_RECEIVED.getValue());
         }
         return data;
     }
@@ -66,6 +77,33 @@ public class ResponseParsingService {
             throw new BddTestingException(String.format(EMPTY_RESPONSE_DATA_RECEIVED.getValue()));
         }
         return data;
+    }
+
+    private static <T extends OcpiRequestData> void validateEquals(List<T> actualList, List<T> expectedList) {
+        boolean isEqualCollection = CollectionUtils.isEqualCollection(expectedList, actualList);
+        if (!isEqualCollection) {
+            List<T> differences = new ArrayList<>(CollectionUtils.subtract(actualList, expectedList));
+
+            log.warn("Actual list has no expected objects:\n {}", differences.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.joining("\n")));
+
+            log.warn(EXPECTED_AND_ACTUAL_LISTS_NOT_EQUALS.getValue());
+            throw new AssertionException(EXPECTED_AND_ACTUAL_LISTS_NOT_EQUALS.getValue());
+        }
+    }
+
+    private static <T extends OcpiRequestData> void validateListSize(List<Map<String, String>> rows,
+                                                                     List<T> actualList) {
+        if (rows.size() != actualList.size()) {
+            throw new AssertionException(NON_MATCH_RESPONSE_LIST_SIZE.getValue());
+        }
+    }
+
+    private static void checkNotEmpty(Response response) {
+        if (response.body().asString().isEmpty()) {
+            throw new BddTestingException(String.format(EMPTY_RESPONSE_RECEIVED.getValue()));
+        }
     }
 
     public <T extends OcpiRequestData> void validateResponseListEquals(List<Map<String, String>> rows,
@@ -91,27 +129,6 @@ public class ResponseParsingService {
         if (!notFoundRows.isEmpty()) {
             log.warn("Non-matching rows: " + notFoundRows);
             throw new AssertionException(String.format(NON_MATCH_ROW.getValue(), notFoundRows));
-        }
-    }
-
-    private static <T extends OcpiRequestData> void validateEquals(List<T> actualList, List<T> expectedList) {
-        boolean isEqualCollection = CollectionUtils.isEqualCollection(expectedList, actualList);
-        if (!isEqualCollection) {
-            List<T> differences = new ArrayList<>(CollectionUtils.subtract(actualList, expectedList));
-
-            log.warn("Actual list has no expected objects:\n {}", differences.stream()
-                    .map(Object::toString)
-                    .collect(Collectors.joining("\n")));
-
-            log.warn(EXPECTED_AND_ACTUAL_LISTS_NOT_EQUALS.getValue());
-            throw new AssertionException(EXPECTED_AND_ACTUAL_LISTS_NOT_EQUALS.getValue());
-        }
-    }
-
-    private static <T extends OcpiRequestData> void validateListSize(List<Map<String, String>> rows,
-                                                                     List<T> actualList) {
-        if (rows.size() != actualList.size()) {
-            throw new AssertionException(NON_MATCH_RESPONSE_LIST_SIZE.getValue());
         }
     }
 
@@ -154,12 +171,6 @@ public class ResponseParsingService {
             return true;
         } catch (AssertionException e) {
             return false;
-        }
-    }
-
-    private static void checkNotEmpty(Response response) {
-        if (response.body().asString().isEmpty()) {
-            throw new BddTestingException(String.format(EMPTY_RESPONSE_RECEIVED.getValue()));
         }
     }
 

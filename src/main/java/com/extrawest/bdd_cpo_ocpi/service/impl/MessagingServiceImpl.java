@@ -9,17 +9,17 @@ import com.extrawest.bdd_cpo_ocpi.validation.ResponseMessageFactory;
 import com.extrawest.ocpi.model.markers.OcpiRequestData;
 import com.extrawest.ocpi.model.markers.OcpiResponseData;
 import io.restassured.response.Response;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import jakarta.inject.Singleton;
 
 import java.util.Map;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
+@Singleton
 public class MessagingServiceImpl implements MessageService {
     private final AssertionAndValidationService factories;
+
+    public MessagingServiceImpl(AssertionAndValidationService factories) {
+        this.factories = factories;
+    }
 
     @Override
     public OcpiRequestData createRequestBody(ImplementedMessageType type, Map<String, String> fields) {

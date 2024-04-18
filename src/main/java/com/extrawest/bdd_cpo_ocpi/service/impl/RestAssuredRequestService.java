@@ -1,18 +1,15 @@
 package com.extrawest.bdd_cpo_ocpi.service.impl;
 
 import com.extrawest.bdd_cpo_ocpi.exception.BddTestingException;
-import com.extrawest.bdd_cpo_ocpi.service.RequestService;
 import com.extrawest.bdd_cpo_ocpi.service.RequestHolder;
-import io.cucumber.spring.ScenarioScope;
+import com.extrawest.bdd_cpo_ocpi.service.RequestService;
 import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.Method;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.stereotype.Component;
+import jakarta.inject.Singleton;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -21,9 +18,8 @@ import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.FAILED_TO_REQ
 import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.UNKNOWN_HTTP_METHOD;
 import static io.restassured.RestAssured.given;
 
-@ScenarioScope(proxyMode = ScopedProxyMode.NO)
-@Component
-@RequiredArgsConstructor
+//@ScenarioScope(proxyMode = ScopedProxyMode.NO)
+@Singleton
 public class RestAssuredRequestService implements RequestService {
 
     @Override

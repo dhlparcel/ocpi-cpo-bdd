@@ -4,7 +4,7 @@ import com.extrawest.bdd_cpo_ocpi.exception.BddTestingException;
 import com.extrawest.bdd_cpo_ocpi.repository.VersionsRepository;
 import com.extrawest.ocpi.model.dto.VersionDto;
 import com.extrawest.ocpi.model.enums.VersionNumber;
-import org.springframework.stereotype.Component;
+import jakarta.inject.Singleton;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.VERSION_2_2_1_NOT_SUPPORTED;
 
-@Component
+@Singleton
 public class VersionsRepositoryImpl implements VersionsRepository {
     private final Map<VersionNumber, VersionDto> versionsMap = new ConcurrentHashMap<>();
 

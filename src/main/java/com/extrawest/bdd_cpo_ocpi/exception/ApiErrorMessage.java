@@ -1,15 +1,10 @@
 package com.extrawest.bdd_cpo_ocpi.exception;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public enum ApiErrorMessage {
     INVALID_REQUIRED_PARAM("Invalid required '%s' parameter for '%s' message. "),
     INVALID_FIELD_VALUE("'%s' has invalid '%s' field value. %s. "),
     REDUNDANT_EXPECTED_PARAM("Redundant '%s' expected parameter for '%s' message. " +
-            "Required fields: %s. Optional fields: %s"),
+                             "Required fields: %s. Optional fields: %s"),
     NON_MATCH_FIELDS("%s has non match field(s): %s"),
     NON_MATCH_ROW("Not found in response: %s"),
     NON_MATCH_RESPONSE_LIST_SIZE("Response list and expected list aren't equal in size"),
@@ -35,8 +30,16 @@ public enum ApiErrorMessage {
     MODEL_CANT_BE_INSTANTIATED("Model %s can not be instantiated: %s"),
     EMPTY_RESPONSE_RECEIVED("Empty response received"),
     EMPTY_RESPONSE_DATA_RECEIVED("Response has no data value"),
-    EMPTY_EXPECTED_VALUE("Expected value was not provided");
+    EMPTY_EXPECTED_VALUE("Expected value was not provided"),
+    INVALID_RESPONSE_RECEIVED("Response was invalid");
 
     private final String value;
 
+    ApiErrorMessage(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

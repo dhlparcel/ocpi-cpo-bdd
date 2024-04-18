@@ -6,17 +6,16 @@ import com.extrawest.ocpi.model.dto.Endpoint;
 import com.extrawest.ocpi.model.dto.VersionDetailsDto;
 import com.extrawest.ocpi.model.enums.ModuleID;
 import com.extrawest.ocpi.model.enums.VersionNumber;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
+import jakarta.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.*;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.CPO_NOT_REGISTERED;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.MODULE_NOT_IMPLEMENTED;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.VERSION_IS_NOT_2_2_1;
 
-@Component
-@RequiredArgsConstructor
+@Singleton
 public class VersionDetailsRepositoryImpl implements VersionDetailsRepository {
     private final List<Endpoint> endpoints = new ArrayList<>();
 
@@ -35,7 +34,7 @@ public class VersionDetailsRepositoryImpl implements VersionDetailsRepository {
 
     @Override
     public Endpoint getEndpoint(ModuleID moduleID) {
-        if (CollectionUtils.isEmpty(endpoints)) {
+        if (endpoints == null || endpoints.isEmpty()) {
             throw new BddTestingException(String.format(CPO_NOT_REGISTERED.getValue()));
         }
         return endpoints.stream().filter(e -> e.getIdentifier().equals(moduleID)).findFirst()

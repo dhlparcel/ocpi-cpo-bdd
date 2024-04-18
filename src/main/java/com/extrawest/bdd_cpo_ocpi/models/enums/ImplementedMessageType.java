@@ -1,15 +1,10 @@
 package com.extrawest.bdd_cpo_ocpi.models.enums;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.util.Arrays;
 import java.util.Objects;
 
 import static com.extrawest.bdd_cpo_ocpi.utils.EnumUtils.findByField;
 
-@Getter
-@AllArgsConstructor
 public enum ImplementedMessageType {
     TARIFF("tariff"),
     VERSION("version"),
@@ -27,6 +22,10 @@ public enum ImplementedMessageType {
 
     private final String value;
 
+    ImplementedMessageType(String value) {
+        this.value = value;
+    }
+
     public static boolean contains(String name) {
         return Arrays.stream(ImplementedMessageType.values())
                 .anyMatch(e -> Objects.equals(e.getValue(), name));
@@ -37,6 +36,10 @@ public enum ImplementedMessageType {
                 ImplementedMessageType.class,
                 ImplementedMessageType::getValue,
                 value);
+    }
+
+    public String getValue() {
+        return value;
     }
 
     @Override

@@ -9,12 +9,11 @@ import com.extrawest.ocpi.model.markers.OcpiRequestData;
 import com.extrawest.ocpi.model.markers.OcpiResponseData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -29,7 +28,11 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.*;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.BUG_CREATING_INSTANCE;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.INVALID_FIELD_VALUE;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.INVALID_REQUIRED_PARAM;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.NON_MATCH_FIELDS;
+import static com.extrawest.bdd_cpo_ocpi.exception.ApiErrorMessage.REDUNDANT_EXPECTED_PARAM;
 import static java.util.Objects.isNull;
 
 /**
@@ -41,14 +44,14 @@ import static java.util.Objects.isNull;
  * with relevant field of parametrized model. Mandatory for all parametrized model's fields.
  */
 
-@Slf4j
-@Component
+@Singleton
 public abstract class IncomingMessageFieldsFactory<T extends OcpiRequestData> {
-    @Autowired
-    @Setter
+    private static final Logger log = LoggerFactory.getLogger(IncomingMessageFieldsFactory.class);
+
+    @Inject
     protected ObjectMapper mapper;
 
-    @Value("${wildcard:any}")
+    //    @Value("${wildcard:any}")
     protected String wildCard;
     protected String nonMatchMessage = "'%s', field %s has unexpected value.\nExpected: '%s' \nActual  : '%s'";
 
@@ -174,8 +177,8 @@ public abstract class IncomingMessageFieldsFactory<T extends OcpiRequestData> {
                                                     Boolean actual, String fieldName) {
         String expected = expectedParams.get(fieldName);
         boolean result = Objects.equals(expected, wildCard) ||
-                (actual == null && expected == null) ||
-                (actual != null && Objects.equals(expected, actual.toString()));
+                         (actual == null && expected == null) ||
+                         (actual != null && Objects.equals(expected, actual.toString()));
         if (!result) {
             log.warn(String.format(nonMatchMessage, getParameterizeClassName(), fieldName, expected, actual));
         }
@@ -197,8 +200,8 @@ public abstract class IncomingMessageFieldsFactory<T extends OcpiRequestData> {
                                                     Integer actual, String fieldName) {
         String expected = expectedParams.get(fieldName);
         boolean result = Objects.equals(expected, wildCard) ||
-                (actual == null && expected == null) ||
-                (actual != null && Objects.equals(expected, String.valueOf(actual)));
+                         (actual == null && expected == null) ||
+                         (actual != null && Objects.equals(expected, String.valueOf(actual)));
 
         if (!result) {
             log.warn(String.format(nonMatchMessage, getParameterizeClassName(), fieldName, expected, actual));
@@ -214,7 +217,7 @@ public abstract class IncomingMessageFieldsFactory<T extends OcpiRequestData> {
             return actual == null;
         }
         boolean result = Objects.equals(expected, wildCard)
-                || Objects.equals(actual, LocalDateTime.parse(expected));
+                         || Objects.equals(actual, LocalDateTime.parse(expected));
 
         if (!result) {
             log.warn(String.format(nonMatchMessage, getParameterizeClassName(), fieldName, expected, actual));

@@ -1,17 +1,25 @@
 package com.extrawest.bdd_cpo_ocpi.utils;
 
-import com.extrawest.ocpi.model.dto.*;
+import com.extrawest.ocpi.model.dto.BusinessDetails;
+import com.extrawest.ocpi.model.dto.CdrDimension;
+import com.extrawest.ocpi.model.dto.ChargingPeriod;
+import com.extrawest.ocpi.model.dto.CredentialsRole;
+import com.extrawest.ocpi.model.dto.Price;
 import com.extrawest.ocpi.model.dto.cdr.CdrLocation;
 import com.extrawest.ocpi.model.dto.cdr.CdrToken;
 import com.extrawest.ocpi.model.dto.location.Connector;
 import com.extrawest.ocpi.model.dto.location.GeoLocation;
 import com.extrawest.ocpi.model.dto.tariff.PriceComponent;
 import com.extrawest.ocpi.model.dto.tariff.TariffElement;
-import com.extrawest.ocpi.model.enums.*;
+import com.extrawest.ocpi.model.enums.CdrDimensionType;
+import com.extrawest.ocpi.model.enums.ConnectorFormat;
+import com.extrawest.ocpi.model.enums.ConnectorType;
+import com.extrawest.ocpi.model.enums.PowerType;
+import com.extrawest.ocpi.model.enums.Role;
+import com.extrawest.ocpi.model.enums.TariffDimensionType;
+import com.extrawest.ocpi.model.enums.TokenType;
 import com.extrawest.ocpi.model.markers.OcpiRequestData;
-import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,7 +32,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@UtilityClass
 public class Generators {
     public static String generateString(int length) {
         return RandomStringUtils.random(length, true, false);
@@ -59,7 +66,6 @@ public class Generators {
         return LocalTime.ofSecondOfDay(randomTime);
     }
 
-    @NotNull
     private static LocalDate randomDate() {
         LocalDate endExclusive = LocalDate.now();
         LocalDate startInclusive = endExclusive.minusMonths(36);
@@ -68,23 +74,6 @@ public class Generators {
         long randomDay = ThreadLocalRandom.current()
                 .nextLong(startEpochDay, endEpochDay);
         return LocalDate.ofEpochDay(randomDay);
-    }
-
-    public float randomFloat() {
-        float leftLimit = 1F;
-        float rightLimit = 500F;
-        Float randomFloat = leftLimit + new Random().nextFloat() * (rightLimit - leftLimit);
-        return Float.parseFloat(String.format("%.4f", randomFloat));
-    }
-
-    private Integer randomInteger(int leftLimit, int rightLimit) {
-        return leftLimit + (int) (new Random().nextFloat() * (rightLimit - leftLimit));
-    }
-
-    public Integer randomInteger() {
-        int leftLimit = 1;
-        int rightLimit = 250;
-        return randomInteger(leftLimit, rightLimit);
     }
 
     public static TariffElement generateTariffElement() {
@@ -182,5 +171,21 @@ public class Generators {
         businessDetails.setName(generateString(36));
         return businessDetails;
     }
-}
 
+    public static float randomFloat() {
+        float leftLimit = 1F;
+        float rightLimit = 500F;
+        Float randomFloat = leftLimit + new Random().nextFloat() * (rightLimit - leftLimit);
+        return Float.parseFloat(String.format("%.4f", randomFloat));
+    }
+
+    private static Integer randomInteger(int leftLimit, int rightLimit) {
+        return leftLimit + (int) (new Random().nextFloat() * (rightLimit - leftLimit));
+    }
+
+    public static Integer randomInteger() {
+        int leftLimit = 1;
+        int rightLimit = 250;
+        return randomInteger(leftLimit, rightLimit);
+    }
+}
